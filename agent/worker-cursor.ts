@@ -189,6 +189,10 @@ export async function mergeWhenGreen(prUrl: string): Promise<string> {
     const noCiConfigured = !sawChecks && Date.now() > deadline - 6.5 * 60_000; // no checks after ~90s
     if (allDone || noCiConfigured) {
       await gh.pulls.merge({ owner, repo, pull_number, merge_method: "squash" });
+      // Clean up after itself: delete the agent's branch (same-repo PRs only).
+      if (pr.head.repo?.full_name === `${owner}/${repo}`) {
+        await gh.git.deleteRef({ owner, repo, ref: `heads/${pr.head.ref}` }).catch(() => undefined);
+      }
       return allDone ? "merged after CI passed" : "merged (no CI checks found)";
     }
     await sleep(15_000);

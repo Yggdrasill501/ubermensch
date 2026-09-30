@@ -22,6 +22,10 @@ Onboarding interview (Slack DM) ──> playbook                   Dashboard (Ne
 
 - **One process** (`agent/`) = Slack gateway + heartbeat + brain + workers. **One Next.js app** = dashboard.
   They share `src/lib/db.ts` (SQLite, WAL). `npm run dev` runs both.
+- **Workers run on Cursor Cloud Agents** (`agent/worker-cursor.ts`, paid from Cursor credits): one durable
+  Cursor agent per task on the demo repo; it opens the PR, follow-up runs carry human answers, and the
+  daemon merges once CI is green. Fallback: local Claude Agent SDK worker (`WORKER_BACKEND=claude`).
+- **No-LLM mode**: without `ANTHROPIC_API_KEY`, onboarding is a scripted interview and triage is rule-based.
 - **Context never overflows**: the brain holds no task details; every task gets a fresh Agent SDK session
   seeded with playbook + task brief + recalled memory, and writes a summary back when done.
 - **Pause/resume**: `ask_human` posts in the task's Slack thread → task `waiting_on_human` → worker exits.
@@ -41,24 +45,24 @@ onboarding answers live on stage), Cursor/Claude Code (building). Productboard: 
 ## Workstreams — one Claude Code session each, strict file ownership
 | WS | Owner files | Brief |
 |---|---|---|
-| WS0 | you: accounts/keys; a Claude Code session builds the demo repo | `SETUP.md`, `briefs/WS0-demo-repo.md` |
-| WS1 | `agent/slack.ts`, `agent/onboarding.ts` | `briefs/WS1-slack-onboarding.md` |
-| WS2 | `agent/brain.ts`, `agent/heartbeat.ts`, `agent/sources/*` | `briefs/WS2-brain-heartbeat.md` |
-| WS3 | `agent/worker.ts`, `agent/tools.ts` | `briefs/WS3-worker.md` |
-| WS4 | `src/app/**` | `briefs/WS4-dashboard.md` |
-| WS5 | `agent/computer.ts` (stretch, only after integration works) | `briefs/WS5-computer-use.md` |
+| WS0 | you: accounts/keys; a Claude Code session builds the demo repo | `docs/SETUP.md`, `docs/briefs/WS0-demo-repo.md` |
+| WS1 | `agent/slack.ts`, `agent/onboarding.ts` | `docs/briefs/WS1-slack-onboarding.md` |
+| WS2 | `agent/brain.ts`, `agent/heartbeat.ts`, `agent/sources/*` | `docs/briefs/WS2-brain-heartbeat.md` |
+| WS3 | `agent/worker.ts`, `agent/tools.ts` | `docs/briefs/WS3-worker.md` |
+| WS4 | `src/app/**` | `docs/briefs/WS4-dashboard.md` |
+| WS5 | `agent/computer.ts` (stretch, only after integration works) | `docs/briefs/WS5-computer-use.md` |
 
 Shared contract (don't change without telling everyone): `src/lib/db.ts`, `agent/config.ts`, `agent/index.ts`,
 and the exported function signatures in each stub.
 
 Launch each session in this same checkout with:
-`claude "Read CLAUDE.md, PLAN.md and briefs/WSn-*.md, then implement it."`
+`claude "Read CLAUDE.md, docs/PLAN.md and docs/briefs/WSn-*.md, then implement it."`
 Sessions don't commit; you commit at checkpoints. Only WS0 installs npm packages — ask before adding one.
 
 ## Timeline (4h)
 | Time | You | Parallel sessions |
 |---|---|---|
-| 0:00–0:40 | SETUP.md: Anthropic key, Slack app (manifest), GitHub PAT, Linear key, `.env` | WS0 demo repo, WS1, WS2, WS3, WS4 all start (they code against stubs) |
+| 0:00–0:40 | docs/SETUP.md: Anthropic key, Slack app (manifest), GitHub PAT, Linear key, `.env` | WS0 demo repo, WS1, WS2, WS3, WS4 all start (they code against stubs) |
 | 0:40–2:00 | Review diffs, answer questions, test each piece as keys land | WS1–WS4 build + self-test |
 | 2:00–2:45 | **Integration**: `npm run dev`, run demo script end to end, fix seams | sessions fix bugs you hand them |
 | 2:45–3:15 | Seed demo data (planted bugs, Linear backlog), deploy to Render if stable | WS5 computer use *only if* green |

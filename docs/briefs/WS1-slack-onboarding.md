@@ -1,6 +1,6 @@
 # WS1 — Slack gateway + onboarding interview
 
-Read `PLAN.md` and `src/lib/db.ts` first. You own **`agent/slack.ts`** and **`agent/onboarding.ts`** only.
+Read `docs/PLAN.md` and `src/lib/db.ts` first. You own **`agent/slack.ts`** and **`agent/onboarding.ts`** only.
 Keep the exported signatures exactly as in the stubs (other workstreams import them).
 
 ## agent/slack.ts

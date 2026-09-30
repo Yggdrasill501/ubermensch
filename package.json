@@ -2,6 +2,22 @@
   "name": "ubermensch",
   "version": "0.1.0",
   "private": true,
+  "description": "An autonomous AI coworker you hire, not prompt: it onboards itself in Slack, picks up Linear/GitHub work on its own, ships PRs via Cursor Cloud Agents, and asks a human only when stuck.",
+  "keywords": [
+    "ai-agent",
+    "autonomous-agent",
+    "ai-coworker",
+    "slack-bot",
+    "linear",
+    "github",
+    "cursor",
+    "cursor-cloud-agents",
+    "claude",
+    "claude-agent-sdk",
+    "anthropic",
+    "nextjs",
+    "hackathon"
+  ],
   "scripts": {
     "dev": "concurrently -k -n web,agent -c blue,magenta \"next dev\" \"npm run agent\"",
     "web": "next dev",

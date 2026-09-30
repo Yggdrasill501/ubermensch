@@ -1,6 +1,6 @@
 # WS4 — Dashboard (Next.js 16 + Tailwind 4 + DaisyUI 5)
 
-Read `PLAN.md`, `src/lib/db.ts` and `AGENTS.md` (Next 16 has breaking changes — check
+Read `docs/PLAN.md`, `src/lib/db.ts` and `AGENTS.md` (Next 16 has breaking changes — check
 `node_modules/next/dist/docs/` before using an API). You own **`src/app/**`** only. DaisyUI is already
 configured in `globals.css` (light/dark themes).
 

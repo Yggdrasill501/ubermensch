@@ -59,7 +59,17 @@ settings:
 2. Settings → Security & access → Personal API keys → `LINEAR_API_KEY`.
 3. After WS0 is done, create 2–3 backlog issues matching the demo repo's planted bugs (see its `DEMO.md`).
 
-## 5. Optional
+## 5. Cursor (workers, ≈5 min)
+1. cursor.com/dashboard → **Integrations**: connect GitHub and give the Cursor app access to `ubermensch-demo`.
+2. cursor.com/dashboard → **API Keys** → create one → `CURSOR_API_KEY`. With it set, workers run as
+   Cursor Cloud Agents (`WORKER_BACKEND=cursor`); without it they fall back to the local Claude Agent SDK.
+3. Cursor opens the PRs; our daemon squash-merges them once CI is green (`AUTO_MERGE=true`), using
+   `GITHUB_TOKEN`, so the token needs **Pull requests RW + Contents RW + Checks R** on the demo repo.
+
+No Anthropic key? Leave `ANTHROPIC_API_KEY` empty: onboarding becomes a scripted 6-question interview
+and triage uses simple rules. Add a key later and both switch to Claude automatically.
+
+## 6. Optional
 - Exa → `EXA_API_KEY`, Firecrawl → `FIRECRAWL_API_KEY` (workers get them as MCP tools when set).
 - Docker Desktop running, for WS5 computer use.
 

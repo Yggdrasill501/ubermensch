@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
+      data-theme="uber"
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >

@@ -2,13 +2,14 @@
 
 # Übermensch
 
-Autonomous AI coworker: lives in Slack/Linear/GitHub, picks up work on its own, spawns parallel
-Claude Agent SDK workers, asks humans only when stuck. Hackathon MVP — optimize for a working demo.
-Read `PLAN.md` for architecture and workstreams; your brief is in `briefs/`.
+Autonomous AI coworker: lives in Slack/Linear/GitHub, picks up work on its own, runs each task as a
+Cursor Cloud Agent (fallback: local Claude Agent SDK worker), asks humans only when stuck. Hackathon MVP — optimize for a working demo.
+Read `docs/PLAN.md` for architecture and workstreams; your brief is in `docs/briefs/`. Setup: `docs/SETUP.md`.
 
 ## Layout
 - `agent/` — daemon (Node 22, run via tsx): `slack.ts` gateway, `onboarding.ts` interview, `brain.ts`
-  triage + dispatch, `heartbeat.ts` proactive polling, `worker.ts` + `tools.ts` Agent SDK workers,
+  triage + dispatch, `heartbeat.ts` proactive polling, `worker-cursor.ts` Cursor workers (+ merge
+  approval), `worker.ts` + `tools.ts` backend switch and Claude Agent SDK fallback,
   `sources/` Linear/GitHub helpers, `computer.ts` computer use (stretch).
 - `src/app/` — Next.js 16 dashboard (Tailwind 4 + DaisyUI 5), polls `GET /api/state`.
 - `src/lib/db.ts` — SQLite (better-sqlite3) shared by both. **The contract between workstreams.**

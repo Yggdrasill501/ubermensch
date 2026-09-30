@@ -1,6 +1,6 @@
 # WS3 — Worker agents (Claude Agent SDK) + the coworker's tools
 
-Read `PLAN.md` and `src/lib/db.ts` first. You own **`agent/worker.ts`** and **`agent/tools.ts`**. Keep the
+Read `docs/PLAN.md` and `src/lib/db.ts` first. You own **`agent/worker.ts`** and **`agent/tools.ts`**. Keep the
 exported signatures. Import `postMessage` from `./slack` (WS1) and Linear helpers from `./sources/linear`
 (WS2) — stubs for now; mock them in your self-test.
 

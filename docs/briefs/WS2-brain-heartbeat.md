@@ -1,6 +1,6 @@
 # WS2 — Brain (triage + dispatch) and heartbeat (proactive pickup)
 
-Read `PLAN.md` and `src/lib/db.ts` first. You own **`agent/brain.ts`**, **`agent/heartbeat.ts`**,
+Read `docs/PLAN.md` and `src/lib/db.ts` first. You own **`agent/brain.ts`**, **`agent/heartbeat.ts`**,
 **`agent/sources/linear.ts`**, **`agent/sources/github.ts`**. Keep exported signatures as in the stubs.
 Import `postMessage`/`addReaction` from `./slack` (WS1) and `runTask`/`runningWorkers` from `./worker` (WS3)
 — they're stubs now; test your code with those mocked.

@@ -87,7 +87,14 @@ ${memories || "- nothing relevant"}
 async function streamRun(task: TaskRow, agentId: string, runId: string, abort: AbortSignal) {
   let buffer = "";
   const seenCalls = new Set<string>();
+  let thinking = "";
+  const flushThinking = () => {
+    const t = oneLine(thinking);
+    if (t.length > 20) logActivity("progress", `💭 ${trunc(t, 300)}`, task.id);
+    thinking = "";
+  };
   const flush = () => {
+    if (thinking) flushThinking();
     const text = oneLine(buffer);
     if (text.length > 20) logActivity("progress", trunc(text, 300), task.id);
     buffer = "";
@@ -121,9 +128,10 @@ async function streamRun(task: TaskRow, agentId: string, runId: string, abort: A
             buffer += data.text;
             if (buffer.includes("\n\n") || buffer.length > 400) flush();
           } else if (event === "thinking" && typeof data.text === "string") {
-            flush();
-            const text = oneLine(data.text);
-            if (text.length > 20) logActivity("progress", `💭 ${trunc(text, 300)}`, task.id);
+            // Cursor streams thinking in fragments; log whole sentences, not word salad.
+            thinking += (thinking && !/\s$/.test(thinking) ? " " : "") + data.text;
+            const t = oneLine(thinking);
+            if ((t.length > 60 && /[.!?:]$/.test(t)) || t.length > 280) flushThinking();
           } else if (event === "tool_call" && typeof data.callId === "string" && !seenCalls.has(data.callId)) {
             seenCalls.add(data.callId);
             flush();
@@ -203,6 +211,26 @@ export async function mergeWhenGreen(prUrl: string): Promise<string> {
   return "not merged: CI still running after 8 min";
 }
 
+/** Finds the PR for the agent's branch, or opens one (Cursor's autoCreatePR doesn't always fire). */
+export async function ensurePr(task: TaskRow, summary: string, branch?: string): Promise<string | null> {
+  if (!branch) return null;
+  const [owner, repo] = config.github.repo().split("/");
+  const gh = octokit();
+  const { data: existing } = await gh.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: "all" });
+  if (existing[0]) return existing[0].html_url;
+  const { data: base } = await gh.repos.get({ owner, repo });
+  const { data: pr } = await gh.pulls.create({
+    owner,
+    repo,
+    head: branch,
+    base: base.default_branch,
+    title: task.title,
+    body: `${summary}\n\n---\nOpened by **Übermensch** (Cursor agent: https://cursor.com/agents/${task.session_id}).`,
+  });
+  logActivity("progress", `Opened PR ${pr.html_url}`, task.id);
+  return pr.html_url;
+}
+
 /** Linear issue id for this task, if it came from (or was mirrored to) Linear. */
 function linearIssueId(task: TaskRow): string | null {
   const ref = task.source_ref;
@@ -214,8 +242,19 @@ async function safeLinear(task: TaskRow, state: string, comment?: string) {
   const id = linearIssueId(task);
   if (!id) return;
   try {
-    await setIssueState(id, state);
+    const fallbacks: Record<string, string[]> = { "In Review": ["In Review", "In Progress"] };
+    let lastErr: unknown = null;
+    for (const name of fallbacks[state] ?? [state]) {
+      try {
+        await setIssueState(id, name);
+        lastErr = null;
+        break;
+      } catch (e) {
+        lastErr = e;
+      }
+    }
     if (comment) await commentOnIssue(id, comment);
+    if (lastErr) throw lastErr;
   } catch (e) {
     logActivity("error", `Linear update failed: ${trunc(errMsg(e), 200)}`, task.id);
   }
@@ -271,7 +310,7 @@ async function askToMerge(task: TaskRow, summary: string, prUrl: string) {
   await safeLinear(task, "In Review", `PR ready for review: ${prUrl}`);
 }
 
-async function finishTask(task: TaskRow, summary: string, prUrl: string | null, merge: boolean) {
+export async function finishTask(task: TaskRow, summary: string, prUrl: string | null, merge: boolean) {
   let mergeNote = "";
   if (prUrl && merge) {
     mergeNote = await mergeWhenGreen(prUrl).catch((e) => `not merged: ${trunc(errMsg(e), 200)}`);
@@ -364,7 +403,14 @@ export async function runTaskWithCursor(task: TaskRow, running: Set<string>): Pr
     }
 
     const summary = trunc(result.match(/^SUMMARY:\s*(.+)$/m)?.[1]?.trim() || oneLine(result) || "Finished.", 1500);
-    const prUrl = run.git?.branches?.find((b) => b.prUrl)?.prUrl ?? task.pr_url ?? null;
+    const prUrl =
+      run.git?.branches?.find((b) => b.prUrl)?.prUrl ??
+      (await ensurePr(task, summary, run.git?.branches?.[0]?.branch).catch((e) => {
+        logActivity("error", `Could not open a PR: ${trunc(errMsg(e), 200)}`, task.id);
+        return null;
+      })) ??
+      task.pr_url ??
+      null;
     if (prUrl && needsMergeApproval()) {
       await askToMerge(task, summary, prUrl);
       return;

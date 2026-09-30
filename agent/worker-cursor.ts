@@ -180,20 +180,23 @@ export async function mergeWhenGreen(prUrl: string): Promise<string> {
         { id: pr.node_id },
       );
     }
-    const { data: checks } = await gh.checks.listForRef({ owner, repo, ref: pr.head.sha });
+    const skipCi = config.skipCi;
+    const { data: checks } = skipCi
+      ? { data: { check_runs: [] as { name: string; status: string; conclusion: string | null }[] } }
+      : await gh.checks.listForRef({ owner, repo, ref: pr.head.sha });
     const runs = checks.check_runs;
     if (runs.length > 0) sawChecks = true;
     const failed = runs.find((r) => r.status === "completed" && !["success", "skipped", "neutral"].includes(r.conclusion ?? ""));
     if (failed) return `not merged: CI check "${failed.name}" ${failed.conclusion}`;
     const allDone = runs.length > 0 && runs.every((r) => r.status === "completed");
     const noCiConfigured = !sawChecks && Date.now() > deadline - 6.5 * 60_000; // no checks after ~90s
-    if (allDone || noCiConfigured) {
+    if (skipCi || allDone || noCiConfigured) {
       await gh.pulls.merge({ owner, repo, pull_number, merge_method: "squash" });
       // Clean up after itself: delete the agent's branch (same-repo PRs only).
       if (pr.head.repo?.full_name === `${owner}/${repo}`) {
         await gh.git.deleteRef({ owner, repo, ref: `heads/${pr.head.ref}` }).catch(() => undefined);
       }
-      return allDone ? "merged after CI passed" : "merged (no CI checks found)";
+      return skipCi ? "merged" : allDone ? "merged after CI passed" : "merged (no CI checks found)";
     }
     await sleep(15_000);
   }

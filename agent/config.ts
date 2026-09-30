@@ -32,6 +32,8 @@ export const config = {
   workerBackend: (process.env.WORKER_BACKEND ??
     (process.env.CURSOR_API_KEY ? "cursor" : "claude")) as "cursor" | "claude",
   autoMerge: (process.env.AUTO_MERGE ?? "true") !== "false",
+  /** Merge immediately without waiting for CI checks (SKIP_CI=true). */
+  skipCi: process.env.SKIP_CI === "true",
   exaApiKey: opt("EXA_API_KEY"),
   firecrawlApiKey: opt("FIRECRAWL_API_KEY"),
 

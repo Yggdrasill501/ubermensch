@@ -183,6 +183,7 @@ Every variable from [`.env.example`](.env.example):
 | `CURSOR_API_KEY` | *(empty)* | Cursor API key. Enables the Cursor Cloud Agent backend. |
 | `CURSOR_MODEL` | *(Cursor default)* | Model ID for Cursor agents. |
 | `AUTO_MERGE` | `true` | Squash-merge agent PRs once CI is green. Set it to `false` to leave PRs open for review. |
+| `SKIP_CI` | `true` | Merge right away without waiting for CI checks. Set `false` to require green CI first. |
 | `MERGE_APPROVAL` | `playbook` | `playbook`: ask for approval in Slack before merging if the playbook says so. `always` / `never` override it. |
 
 `DB_PATH` (default `data/ubermensch.db`) is not in `.env.example`, but you can set it to move the
